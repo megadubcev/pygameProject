@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.init()
 screen = pygame.display.set_mode((600, 600))
@@ -11,7 +12,11 @@ class Board:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = [[2] * width for _ in range(height)]
+
+        self.board = [[0] * width for _ in range(height)]
+        for i in range(self.height):
+            for j in range(self.width):
+                self.board[i][j] = random.randint(2, 7)
         # значения по умолчанию
         self.left = 10
         self.top = 10
@@ -34,6 +39,7 @@ class Board:
     def render2(self):
         for i in range(self.height):
             for j in range(self.width):
+                r = random.randint(self.cell_size // 4 - 2, self.cell_size // 2 - 3)
                 if self.board[i][j] == 1:
                     pygame.draw.line(screen, pygame.Color("blue"),
                                      (self.left + j * self.cell_size + 2, self.top + i * self.cell_size + 2),
@@ -44,10 +50,11 @@ class Board:
                                      (self.left + (j + 1) * self.cell_size - 2,
                                       self.top + i * self.cell_size + 2), 2)
                 elif self.board[i][j] == 2:
-                    r = random.randint(self.cell_size // 4 - 2, self.cell_size // 2 - 3)
                     pygame.draw.circle(screen, pygame.Color("red"),
                                        (self.left + int((j + 0.5) * self.cell_size),
-                                        self.top + int((i + 0.5) * self.cell_size)), r, 0)
+                                        self.top + int((i + 0.5) * self.cell_size)), r - 13, 0)
+                else:
+                    self.drawPoligon(self.board[i][j], r, (i, j))
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -79,16 +86,34 @@ class Board:
                     s += 1
         return s
 
+    def drawPoligon(self, n, r, cell_coords):
+        angles = []
+        points = []
+        for i in range(n):
+            angles.append(random.randint(0, 359))
+        angles.sort()
+        for angle in angles:
+            points.append((self.top + int((cell_coords[1] + 0.5) * self.cell_size) + int(math.cos(angle / 57) * r),
+                           self.left + int((cell_coords[0] + 0.5) * self.cell_size) - math.sin(angle / 57) * r))
 
-board = Board(5, 5)
+        pygame.draw.polygon(screen, pygame.Color("red"), points, 0)
+
+
+board = Board(3, 3)
 
 board.render()
 board.render2()
 pygame.display.flip()
+maxs = 0
 for i in range(board.height):
     for j in range(board.width):
         board.square[i][j] = board.squaref((i, j))
+        if board.square[i][j] > maxs:
+            maxs = board.square[i][j]
+
 print(board.square)
+print(board.board)
+print(maxs)
 
 running = True
 while running:
