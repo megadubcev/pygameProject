@@ -24,6 +24,16 @@ class Board:
         self.cell_size = (widthS - 2 * self.left) // self.width
         self.square = [[0] * width for _ in range(height)]
         self.shape = [[[]] * width for _ in range(height)]
+        self.colors = [pygame.Color("red"), pygame.Color("orange"), pygame.Color("yellow"), pygame.Color("green"),
+                       pygame.Color("blue"), pygame.Color("purple"), pygame.Color("pink")]
+        self.color = [[0] * width for _ in range(height)]
+        if self.width > len(self.colors):
+            len2 = len(self.colors)
+        else:
+            len2 = self.width
+        for i in range(self.height):
+            for j in range(self.width):
+                self.color[i][j] = (-i + j) % len2
 
     # настройка внешнего вида
     def set_view(self, left, top, cell_size):
@@ -71,9 +81,9 @@ class Board:
                                      (self.left + (j + 1) * self.cell_size - 2,
                                       self.top + i * self.cell_size + 2), 2)
                 elif self.board[i][j] == 2:
-                    pygame.draw.circle(screen, pygame.Color("red"), self.shape[i][j][0], self.shape[i][j][1], 0)
+                    pygame.draw.circle(screen, self.colors[self.color[i][j]], self.shape[i][j][0], self.shape[i][j][1], 0)
                 else:
-                    pygame.draw.polygon(screen, pygame.Color("red"), self.shape[i][j], 0)
+                    pygame.draw.polygon(screen, self.colors[self.color[i][j]], self.shape[i][j], 0)
 
     def get_click(self, mouse_pos):
         cell = self.get_cell(mouse_pos)
@@ -117,7 +127,7 @@ class Board:
         return points
 
 
-board = Board(20, 20)
+board = Board(6, 6)
 
 board.render()
 board.createShapes()
