@@ -1,9 +1,14 @@
 import pygame
 import random
 import math
-import os
+import sys
 
 pygame.init()
+pygame.mixer.init()
+global soundVictory, soundLose
+soundVictory = [pygame.mixer.Sound("vic_ura_1.wav"), pygame.mixer.Sound("vic_aplodis_2.wav"),
+                pygame.mixer.Sound("vic_tarelka_3.wav")]
+soundLose = pygame.mixer.Sound("luse_1.wav")
 widthS = heightS = 700
 screen = pygame.display.set_mode((widthS, widthS))
 clock = pygame.time.Clock();
@@ -12,6 +17,11 @@ pygame.display.flip()
 screen_rect = (0, 0, widthS, heightS)
 
 all_sprites = pygame.sprite.Group()
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
 class Particle(pygame.sprite.Sprite):
@@ -83,6 +93,7 @@ class Board:
                 self.color[i][j] = (i - j) % (self.len2)
         self.t = 0
         self.time = 0
+        self.timer = 15
 
         self.clicked = False
 
@@ -157,14 +168,17 @@ class Board:
         return [i, j]
 
     def on_click(self, cell_coords):
-        global score, victory
+        global score, victory, soundVictory, soundLose
         self.clicked = True
         victory = self.square[cell_coords[0]][cell_coords[1]] == self.maxs
         if victory:
+            pygame.mixer.Sound.play(random.choice(soundVictory))
             self.maxij = cell_coords
-            score += (5000 // (self.maxs - self.maxs2) + 1) * self.width * self.height
+            score += (1000 * self.timer // (self.maxs - self.maxs2) + 1) * self.width * self.height
             create_particles(pygame.mouse.get_pos())
+
         else:
+            pygame.mixer.Sound.play(soundLose)
             self.color[cell_coords[0]][cell_coords[1]] = len(self.colors) - 1
 
     def squaref(self, cell_coords):
@@ -195,6 +209,18 @@ class Board:
         if self.t > 200:
             self.color[self.maxij[0]][self.maxij[1]] = (self.color[self.maxij[0]][self.maxij[1]] + 1) % self.len2
             self.t = 0
+
+    def updateTimer(self, tick):
+        global victory
+        self.t += tick
+        if self.t > 1000:
+            self.timer -= 1
+            self.t = 0
+
+        if not self.timer:
+            self.clicked = True
+            victory = False
+
 
 def newBoard(razmer):
     global victory
@@ -231,26 +257,29 @@ def newBoard(razmer):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                terminate()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     board.get_click(event.pos)
         if board.clicked:
             board.changeColor(tick)
             running = all_sprites or board.time < 1500
-
-
-       
+        else:
+            board.updateTimer(tick)
 
         font = pygame.font.Font(None, 50)
-        text = font.render("Очки: " + str(score), 1, (100, 255, 100))
-        screen.blit(text, (5, 5))
+        textScore = font.render("Очки: " + str(score), 1, (100, 255, 100))
+        screen.blit(textScore, (5, 5))
+
+        textTimer = font.render("Время: " + str(board.timer), 1, (100, 255, 100))
+        screen.blit(textTimer, (500, 5))
 
         all_sprites.update()
         all_sprites.draw(screen)
 
         pygame.display.flip()
     print("a")
+
 
 global victory
 victory = True
