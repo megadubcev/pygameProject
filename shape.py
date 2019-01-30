@@ -14,6 +14,7 @@ screen = pygame.display.set_mode((widthS, widthS))
 clock = pygame.time.Clock();
 pygame.display.flip()
 
+global screen_rect
 screen_rect = (0, 0, widthS, heightS)
 
 all_sprites = pygame.sprite.Group()
@@ -25,6 +26,7 @@ def terminate():
 
 
 class Particle(pygame.sprite.Sprite):
+    global screen_rect
     # сгенерируем частицы разного размера
     # fire = [load_image("star.png")]
     fire = [pygame.image.load("star.png")]
@@ -281,15 +283,99 @@ def newBoard(razmer):
     print("a")
 
 
-global victory
-victory = True
-global score
-score = 0
-razmer = 2
-i = 0
-while victory:
-    if i == razmer:
-        razmer += 1
-        i = 0
-    newBoard(razmer)
-    i += 1
+def play():
+    global victory
+    victory = True
+    global score
+    score = 0
+    razmer = 2
+    i = 0
+    while victory:
+        if i == razmer:
+            razmer += 1
+            i = 0
+        newBoard(razmer)
+        i += 1
+    end()
+
+
+def begin():
+    pass
+
+def drawMenu():
+    pass
+
+
+
+def end():
+    global score, name
+    name = ''
+    save_rect = pygame.Rect(370, 500, 300, 100)
+    not_save_rect = pygame.Rect(30, 500, 300, 100)
+    drawEnd()
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+                    if save_rect.contains(mouse_rect):
+                        saveRecord()
+                    elif not_save_rect.contains(mouse_rect):
+                        print("not save")
+
+            if event.type == pygame.KEYDOWN:
+                print(event)
+                if event.unicode == '\x08':
+                    if name:
+                        name = name[0: -1]
+                        drawEnd()
+                elif event.unicode == '\r':
+                    saveRecord()
+                elif len(name) < 10:
+                    name += event.unicode
+                    drawEnd()
+
+            pygame.display.flip()
+
+def drawEnd():
+    global score, name
+    screen.fill((0, 0, 0))
+    font1 = pygame.font.Font(None, 100)
+    font2 = pygame.font.Font(None, 50)
+    textScore = font1.render("Очки: " + str(score), 1, (100, 255, 100))
+    screen.blit(textScore, ((700 - 37 * len("Очки: " + str(score))) // 2, 30))
+
+    textVvedite = font2.render("Введите ваше имя", 1, (100, 255, 100))
+    screen.blit(textVvedite, (190, 250))
+
+    textName = font2.render(name, 1, (100, 255, 100))
+    screen.blit(textName, (110, 320))
+
+    textSave = font2.render("сохранить", 1, (100, 255, 100))
+    screen.blit(textSave, (435, 530))
+
+    textNotSave = font2.render("не сохранять", 1, (100, 255, 100))
+    screen.blit(textNotSave, (65, 530))
+
+    name_rect = pygame.Rect(100, 300, 500, 75)
+    pygame.draw.rect(screen, pygame.Color("white"), name_rect, 5)
+
+    save_rect = pygame.Rect(370, 500, 300, 100)
+    pygame.draw.rect(screen, pygame.Color("white"), save_rect, 5)
+
+    not_save_rect = pygame.Rect(30, 500, 300, 100)
+    pygame.draw.rect(screen, pygame.Color("white"), not_save_rect, 5)
+    pygame.display.flip()
+
+
+def saveRecord():
+    global score, name
+    f = open("records", 'a', encoding="utf8")
+    f.write(name + " " + str(score) + "\n")
+
+
+play()
