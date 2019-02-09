@@ -2,6 +2,8 @@ import pygame
 import random
 import math
 import sys
+import csv
+import pandas as pd
 
 pygame.init()
 pygame.mixer.init()
@@ -18,6 +20,9 @@ global screen_rect
 screen_rect = (0, 0, widthS, heightS)
 
 all_sprites = pygame.sprite.Group()
+
+global name
+name = ''
 
 
 def terminate():
@@ -159,7 +164,6 @@ class Board:
         cell = self.get_cell(mouse_pos)
         if cell and not self.clicked:
             self.on_click(cell)
-            print(self.squaref(cell), cell)
 
     def get_cell(self, mouse_pos):
         x, y = mouse_pos
@@ -190,7 +194,6 @@ class Board:
             for j in range(self.top + cell_coords[1] * self.cell_size + 1,
                            self.top + (cell_coords[1] + 1) * self.cell_size - 1):
                 if screen.get_at((i, j)) != pygame.Color("black"):
-                    # print(screen.get_at((i, j)), pygame.Color("black"), (i, j))
                     s += 1
         return s
 
@@ -246,10 +249,7 @@ def newBoard(razmer):
                 board.maxij2 = [i, j]
                 board.maxs2 = board.square[i][j]
 
-    print(board.square)
-    print(board.board)
-    print(board.maxs, board.maxij)
-    print(board.maxs2, board.maxij2)
+
     running = True
     while running:
         tick = clock.tick(100)
@@ -280,7 +280,7 @@ def newBoard(razmer):
         all_sprites.draw(screen)
 
         pygame.display.flip()
-    print("a")
+
 
 
 def play():
@@ -300,16 +300,135 @@ def play():
 
 
 def begin():
-    pass
+    screen.fill((0, 0, 0))
+    font = pygame.font.Font(None, 100)
 
-def drawMenu():
-    pass
+    textPlay = font.render("Играть", 1, (100, 255, 100))
+    screen.blit(textPlay, (235, 155))
+
+    textRecord = font.render("Рекорды", 1, (100, 255, 100))
+    screen.blit(textRecord, (195, 295))
+
+    textHelp = font.render("Помощь", 1, (100, 255, 100))
+    screen.blit(textHelp, (210, 435))
+
+    play_rect = pygame.Rect(180, 140, 340, 100)
+    pygame.draw.rect(screen, pygame.Color("white"), play_rect, 5)
+
+    record_rect = pygame.Rect(180, 280, 340, 100)
+    pygame.draw.rect(screen, pygame.Color("white"), record_rect, 5)
+
+    help_rect = pygame.Rect(180, 420, 340, 100)
+    pygame.draw.rect(screen, pygame.Color("white"), help_rect, 5)
+    pygame.display.flip()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+                    if play_rect.contains(mouse_rect):
+                        running = False
+                        play()
+                    elif record_rect.contains(mouse_rect):
+                        running = False
+                        show_records()
+                    elif help_rect.contains(mouse_rect):
+                        running = False
+                        help()
+
+            if event.type == pygame.KEYDOWN:
+                if event.unicode == '\r':
+                    play()
+
+            pygame.display.flip()
 
 
+def show_records():
+    screen.fill((0, 0, 0))
+    back_rect = pygame.Rect(250, 600, 200, 70)
+    csvfile = pd.read_csv('records.csv', sep=' ')
+
+    len1 = len(csvfile)
+    if len1 < 10:
+        len2 = len1
+    else:
+        len2 = 10
+    x = 0
+    draw_records(x, csvfile, len2)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+                    if back_rect.contains(mouse_rect):
+                        running = False
+                        begin()
+                elif event.button == 4:
+                    if x > 0:
+                        x -= 1
+                        draw_records(x, csvfile, len2)
+
+                elif event.button == 5:
+                    if x + len2 < len1 - 1:
+                        x += 1
+                        draw_records(x, csvfile, len2)
+
+
+def draw_records(x, csvfile, len2):
+    screen.fill((0, 0, 0))
+    back_rect = pygame.Rect(250, 600, 200, 70)
+    record_rect = pygame.Rect(100, 40, 500, 500)
+    font = pygame.font.Font(None, 50)
+    pygame.draw.rect(screen, pygame.Color("white"), record_rect, 5)
+    pygame.draw.rect(screen, pygame.Color("white"), back_rect, 5)
+    textBack = font.render("Назад", 1, (100, 255, 100))
+    screen.blit(textBack, (290, 620))
+    for i in range(len2):
+        textNumber = font.render(str(i + x + 1) + ".", 1, (100, 255, 100))
+        screen.blit(textNumber, (160, i * 50 + 50))
+        textName = font.render(csvfile.ix[i + x, 0], 1, (100, 255, 100))
+        screen.blit(textName, (260, i * 50 + 50))
+        textScore = font.render(str(csvfile.ix[i + x, 1]), 1, (100, 255, 100))
+        screen.blit(textScore, (460, i * 50 + 50))
+    pygame.display.flip()
+
+
+def help():
+    screen.fill((0, 0, 0))
+    back_rect = pygame.Rect(250, 600, 200, 70)
+    font = pygame.font.Font(None, 50)
+    pygame.draw.rect(screen, pygame.Color("white"), back_rect, 5)
+    textBack = font.render("Назад", 1, (100, 255, 100))
+    screen.blit(textBack, (290, 620))
+    textHelp = ["Ваша задача успеть",  "за 15 секунд выбрать фигуру" , "c наибольшей площадью.",
+                "Чем быстрее вы выберите", "нужную фигуру и чем " , "труднее будет ваш выбор,",
+                "тем больше вы получите очков."]
+
+    for i in range(len(textHelp)):
+        strokaHelp = font.render(textHelp[i], 1, (100, 255, 100))
+        screen.blit(strokaHelp, (90, i * 70 + 50))
+    pygame.display.flip()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+                    if back_rect.contains(mouse_rect):
+                        running = False
+                        begin()
 
 def end():
     global score, name
-    name = ''
     save_rect = pygame.Rect(370, 500, 300, 100)
     not_save_rect = pygame.Rect(30, 500, 300, 100)
     drawEnd()
@@ -322,24 +441,29 @@ def end():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
-                    if save_rect.contains(mouse_rect):
+                    if save_rect.contains(mouse_rect) and name:
+                        running = False
                         saveRecord()
+                        begin()
                     elif not_save_rect.contains(mouse_rect):
-                        print("not save")
+                        running = False
+                        begin()
 
             if event.type == pygame.KEYDOWN:
-                print(event)
                 if event.unicode == '\x08':
                     if name:
                         name = name[0: -1]
                         drawEnd()
                 elif event.unicode == '\r':
-                    saveRecord()
-                elif len(name) < 10:
+                    if name:
+                        saveRecord()
+                        begin()
+                elif len(name) < 10 and event.unicode != ' ':
                     name += event.unicode
                     drawEnd()
 
             pygame.display.flip()
+
 
 def drawEnd():
     global score, name
@@ -374,8 +498,23 @@ def drawEnd():
 
 def saveRecord():
     global score, name
-    f = open("records", 'a', encoding="utf8")
+    f = open("records.csv", 'a', encoding="utf8")
     f.write(name + " " + str(score) + "\n")
+    f.close()
+    sortRecord()
 
 
-play()
+def sortRecord():
+    with open('records.csv', encoding="utf8") as csvfile:
+        records = csv.reader(csvfile, delimiter=' ', quotechar='"')
+        header = next(records)
+        maxRecords = sorted(records, key=lambda x: int(x[1]), reverse=True)
+    with open('records.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(
+            csvfile, delimiter=' ', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csvfile.truncate()
+        writer.writerow(header)
+        for record in maxRecords:
+            writer.writerow(record)
+
+begin()
