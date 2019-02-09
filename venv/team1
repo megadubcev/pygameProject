@@ -1,0 +1,17 @@
+mkdir git_lab2_lesson2
+cd git_lab2_lesson2
+git clone https://github.com/RomchikLife/gitflow .
+git checkout -b "feature/userYourName"
+создаем файл YourName.txt с содержанием "2003"
+git commit -a -m "Добавили год"
+git checkout master
+git checkout -b "feature/listYourName"
+удаляем файл YourName.txt
+создаем файл list.txt с содержанием "Andrew"
+git commit -a -m "Добавили имя"
+git checkout master
+git checkout -b "feature/schoolYourName"
+удаляем файл list.txt
+создаем файл YourNameSchool.txt с содержанием "2"
+git commit -a -m "Добавили школу"
+git checkout master
