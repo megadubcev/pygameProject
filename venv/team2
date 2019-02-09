@@ -1,6 +1,0 @@
-git checkout  "feature/userYourName"
-git push origin
-git checkout  "feature/listYourName"
-git push origin
-git checkout "feature/schoolYourName"
-git push origin
